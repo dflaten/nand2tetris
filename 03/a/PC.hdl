@@ -16,5 +16,15 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    
+    //Inc function
+    Inc16(in=regout, out=incout);
+    //Stay same or add one?
+    Mux16(a=regout, b=incout, sel=inc, out=incorsame);
+    //Prev result or load the new input?
+    Mux16(a=incorsame, b=in, sel=load, out=incorsameornew);
+    //Prev result or reset it?
+    Mux16(a=incorsameornew, b=false, sel=reset, out=falseorout);
+    //Take action on the register
+    Register(in=falseorout, load=true, out=regout, out=out);
 }
