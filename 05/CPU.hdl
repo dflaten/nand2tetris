@@ -28,7 +28,7 @@
 CHIP CPU {
 
     IN  inM[16],         // M value input  (M = contents of RAM[A])
-        instruction[16], // Instruction for execution
+    instruction[16],     // Instruction for execution, format: Cinstruction: 1xxaccccccdddjjj Ainstruction: 0bbbbbbbbbbbbbb
         reset;           // Signals whether to re-start the current
                          // program (reset==1) or continue executing
                          // the current program (reset==0).
@@ -39,15 +39,39 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    Mux16(a=ALUout, b=instruction, sel=c, out=insorold);  
-    //Decode?
-    Register(in=insorold, load=c, out[1..15]=addressM, out=aout);
+    Not(in=instruction[15], out=ainstruc);
     
-    Mux16(a=aout, b=inM, sel=c, out=neworold);  
-    PC(in=aout, reset=reset, inc=true, load=c, out=pc); 
+    //A Register
+    And(a=instruction[15], b=instruction[5], out=toA);
+    Mux16(a=instruction, b=ALUout, sel=toA, out=insorold);  //Put the instruction (must be address) or the output from the ALU in to Register A
+    Or(a=ainstruc, b=toA, out=loada);
+    ARegister(in=insorold, load=loada, out[0..14]=addressM, out=aout);//When do you load vs let the value pass through?
+    
+    Mux16(a=aout, b=inM, sel=instruction[12], out=neworold);//operate on A or M memory?
+  
+    //D Register
+    And(a=instruction[15], b=instruction[4], out=loadd);
+    DRegister(in=ALUout, load=loadd, out=dout); //When do you load? 1)when ALU is assigning new value for D
 
-    Register(in=ALUout, load=c, out=dout);
-    ALU(x=dout, y=neworold, zx=c, nx=c, zy=c, ny=c, f=c, no=c, out=ALUout, out=outM, zr=c, ng=c);
-    //writeM?
+    //ALU
+    ALU(x=dout, y=neworold, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=ALUout, out=outM, zr=zrout, ng=ngout); //
+    
+    //writeM
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    //instruction manipulation
+    //jumps
+    And(a=zrout, b=instruction[1], out=jeq);
+    And(a=ngout, b=instruction[2], out=jlt);
+    Or(a=zrout, b=ngout, out=zeroorneg);
+    Not(in=zeroorneg, out=positive);
+    And(a=positive, b=instruction[0], out=jgt);
+    Or(a=jeq, b=jlt, out=jle);
+    Or(a=jle, b=jgt, out=jumptoa);
+    
+    //Counter
+    And(a=instruction[15], b=jumptoa, out=PCload);
+    Not(in=PCload, out=PCinc);
+    PC(in=aout, inc=PCinc, load=PCload, reset=reset, out[0..14]=pc);
 
 }
