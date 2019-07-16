@@ -1,7 +1,12 @@
-# Input File -> nothing
-# Opens input file/stream and gets ready to parse it.
-def constructor(filename):
-    return null
+import sys
+
+# Input File -> List
+# Opens input file/stream, places lines into list and returns list
+def constructor():
+    with open(sys.argv[1], 'r') as my_file:
+        assemblylines = my_file.readlines()
+    assemblylines = [x.strip() for x in assemblylines] 
+    return assemblylines
 
 # Nothing -> Boolean
 # Are there more commands in the input?
@@ -43,7 +48,7 @@ def comp():
     return string
 
 # Nothing -> String
-# REturns the jump mnemonic in the current C-command
+# Returns the jump mnemonic in the current C-command
 # (8 possibilities). Should be called only when the
 # commandType() is C_COMMAND
 def jump():
