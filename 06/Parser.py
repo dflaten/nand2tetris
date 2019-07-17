@@ -10,6 +10,7 @@ def constructor():
 
 # Nothing -> Boolean
 # Are there more commands in the input?
+# Assuming this function will not be needed.
 def hasMoreCommands():
     return True
 
@@ -21,10 +22,13 @@ def hasMoreCommands():
 def advance():
     return null
 
-# Nothing -> Command 
+# String -> Strint (Command)
 # Returns the type of the current command.
-def commandType():
-    return currentcommand
+def commandType(line):
+    if line[0] == '@':
+        return "A_COMMAND"
+    else:
+        return "C_COMMAND"
 
 # Nothing -> String
 # Returns the symbol of decimal Xxx of current command @
@@ -41,7 +45,7 @@ def dest():
     return string
 
 # Nothing -> String
-# Returns the comp mnemonic in the current C-command
+#Returns the comp mnemonic in the current C-command
 # (28 possibilities). Should be called only when
 # the commandType() is C_COMMAND
 def comp():
